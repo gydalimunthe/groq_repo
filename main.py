@@ -9,6 +9,19 @@ from pydantic import BaseModel
 
 API_URL = "https://api.groq.com/openai/v1/chat/completions"
 MODEL = "openai/gpt-oss-120b"
+PAYLOAD_TEMPLATE = {
+    "messages": [
+        {"role": "assistant", "content": "Be a straightforward assistant"},
+        {"role": "user", "content": "what is the product of 5 x5?"},
+    ],
+    "model": "openai/gpt-oss-120b",
+    "temperature": 1,
+    "max_completion_tokens": 8192,
+    "top_p": 1,
+    "stream": False,
+    "reasoning_effort": "medium",
+    "stop": None,
+}
 
 app = FastAPI(title="Groq Chat App")
 
@@ -18,19 +31,9 @@ class ChatRequest(BaseModel):
 
 
 def call_groq(user_input: str, api_key: str) -> str:
-    payload = {
-        "messages": [
-            {"role": "assistant", "content": "Be a straightforward assistant"},
-            {"role": "user", "content": user_input},
-        ],
-        "model": MODEL,
-        "temperature": 1,
-        "max_completion_tokens": 8192,
-        "top_p": 1,
-        "stream": False,
-        "reasoning_effort": "medium",
-        "stop": None,
-    }
+    payload = dict(PAYLOAD_TEMPLATE)
+    payload["messages"] = [dict(msg) for msg in PAYLOAD_TEMPLATE["messages"]]
+    payload["messages"][1]["content"] = user_input
 
     req = urllib.request.Request(
         API_URL,
